@@ -19,10 +19,16 @@ const int lLimitY = A3;
 // constant
 const long stepsPerRevolution = 200;
 
+int msgRec;
+
 void setup()
 {
 
   Serial.begin(9600);
+  while (!Serial)
+  {
+    Serial.println("Connection with raspberrypi is not connected");
+  }
 
   // stepper motor setup
   pinMode(dirPinZ, OUTPUT);
@@ -59,14 +65,6 @@ void zMoveUp()
   }
 }
 
-void upLimitZ()
-{
-  while (digitalRead(uLimitZ) == 1)
-  {
-    zMoveUp();
-  }
-}
-
 void zMoveDown()
 {
   digitalWrite(dirPinZ, LOW);
@@ -80,14 +78,6 @@ void zMoveDown()
     {
       break;
     }
-  }
-}
-
-void lowLimitZ()
-{
-  while (digitalRead(lLimitZ) == 1)
-  {
-    zMoveDown();
   }
 }
 
@@ -108,14 +98,6 @@ void xMoveUp()
   }
 }
 
-void upLimitX()
-{
-  while (digitalRead(uLimitX) == 1)
-  {
-    xMoveUp();
-  }
-}
-
 void xMoveDown()
 {
   digitalWrite(dirPinX, LOW);
@@ -129,14 +111,6 @@ void xMoveDown()
     {
       break;
     }
-  }
-}
-
-void lowLimitX()
-{
-  while (digitalRead(lLimitX) == 1)
-  {
-    xMoveDown();
   }
 }
 
@@ -157,14 +131,6 @@ void yMoveUp()
   }
 }
 
-void upLimitY()
-{
-  while (digitalRead(uLimitY) == 1)
-  {
-    yMoveUp();
-  }
-}
-
 void yMoveDown()
 {
   digitalWrite(dirPinY, LOW);
@@ -178,14 +144,6 @@ void yMoveDown()
     {
       break;
     }
-  }
-}
-
-void lowLimitY()
-{
-  while (digitalRead(lLimitY) == 1)
-  {
-    yMoveDown();
   }
 }
 
@@ -219,23 +177,70 @@ void normal()
     digitalWrite(stepPinY, LOW);
     delayMicroseconds(1000);
   }
+
   delay(1000);
 }
 
 void loop()
 {
-  // upLimitZ();
-  // delay(1000);
-  // lowLimitZ();
-  // delay(1000);
-  upLimitY();
-  delay(1000);
-  lowLimitY();
-  delay(1000);
-  // upLimitX();
-  // delay(1000);
-  // lowLimitX();
-  // delay(1000);
-  // limitSwitchTest();
-  // normal();
+  if (Serial.available() > 0)
+  {
+    String message = Serial.readStringUntil('\n');
+    if (message != "")
+    {
+      msgRec = message.toInt();
+    }
+  }
+  else
+  {
+    msgRec = 999;
+  }
+
+  switch (msgRec)
+  {
+  case 1:
+    if (digitalRead(uLimitZ) == 1)
+    {
+      zMoveUp();
+    }
+    break;
+  case 2:
+    if (digitalRead(lLimitZ) == 1)
+    {
+      zMoveDown();
+    }
+    break;
+  case 3:
+    if (digitalRead(uLimitX) == 1)
+    {
+      xMoveUp();
+    }
+    break;
+  case 4:
+    if (digitalRead(lLimitX) == 1)
+    {
+      xMoveDown();
+    }
+    break;
+  case 5:
+    if (digitalRead(uLimitY) == 1)
+    {
+      yMoveUp();
+    }
+    break;
+  case 6:
+    if (digitalRead(lLimitZ) == 1)
+    {
+      yMoveDown();
+    }
+    break;
+  case 0:
+    digitalWrite(stepPinZ, LOW);
+    digitalWrite(stepPinX, LOW);
+    digitalWrite(stepPinY, LOW);
+    msgRec = 999;
+    break;
+  default:
+    break;
+  }
 }
