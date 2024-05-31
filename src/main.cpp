@@ -19,8 +19,6 @@ const int lLimitY = A3;
 // constant
 const long stepsPerRevolution = 200;
 
-int msgRec;
-
 void setup()
 {
 
@@ -49,10 +47,11 @@ void setup()
 
 // Z movement
 
-void zMoveUp()
+void zMoveUp(int pos)
 {
   digitalWrite(dirPinZ, HIGH);
-  for (int i = 0; i < stepsPerRevolution * 1; i++)
+  Serial.println("Z Moving up");
+  for (int i = 0; i < stepsPerRevolution * pos; i++)
   {
     digitalWrite(stepPinZ, HIGH);
     delayMicroseconds(500);
@@ -60,15 +59,17 @@ void zMoveUp()
     delayMicroseconds(500);
     if (digitalRead(uLimitZ) == 0)
     {
+      Serial.println("Limit switch hit");
       break;
     }
   }
 }
 
-void zMoveDown()
+void zMoveDown(int pos)
 {
   digitalWrite(dirPinZ, LOW);
-  for (int i = 0; i < stepsPerRevolution * 1; i++)
+  Serial.println("Z Moving Down");
+  for (int i = 0; i < stepsPerRevolution * pos; i++)
   {
     digitalWrite(stepPinZ, HIGH);
     delayMicroseconds(500);
@@ -76,16 +77,18 @@ void zMoveDown()
     delayMicroseconds(500);
     if (digitalRead(lLimitZ) == 0)
     {
+      Serial.println("Limit switch hit");
       break;
     }
   }
 }
 
 // X movement
-void xMoveUp()
+void xMoveUp(int pos)
 {
   digitalWrite(dirPinX, HIGH);
-  for (int i = 0; i < stepsPerRevolution * 10; i++)
+  Serial.println("X Move Up");
+  for (int i = 0; i < stepsPerRevolution * pos; i++)
   {
     digitalWrite(stepPinX, HIGH);
     delayMicroseconds(1000);
@@ -93,15 +96,17 @@ void xMoveUp()
     delayMicroseconds(1000);
     if (digitalRead(uLimitX) == 0)
     {
+      Serial.println("Limit switch hit");
       break;
     }
   }
 }
 
-void xMoveDown()
+void xMoveDown(int pos)
 {
   digitalWrite(dirPinX, LOW);
-  for (int i = 0; i < stepsPerRevolution * 10; i++)
+  Serial.println("X Move Down");
+  for (int i = 0; i < stepsPerRevolution * pos; i++)
   {
     digitalWrite(stepPinX, HIGH);
     delayMicroseconds(1000);
@@ -109,16 +114,18 @@ void xMoveDown()
     delayMicroseconds(1000);
     if (digitalRead(lLimitX) == 0)
     {
+      Serial.println("Limit switch hit");
       break;
     }
   }
 }
 
 // Y movement
-void yMoveUp()
+void yMoveUp(int pos)
 {
   digitalWrite(dirPinY, HIGH);
-  for (int i = 0; i < stepsPerRevolution * 10; i++)
+  Serial.println("Y Move Up");
+  for (int i = 0; i < stepsPerRevolution * pos; i++)
   {
     digitalWrite(stepPinY, HIGH);
     delayMicroseconds(1000);
@@ -126,15 +133,17 @@ void yMoveUp()
     delayMicroseconds(1000);
     if (digitalRead(uLimitY) == 0)
     {
+      Serial.println("Limit switch hit");
       break;
     }
   }
 }
 
-void yMoveDown()
+void yMoveDown(int pos)
 {
   digitalWrite(dirPinY, LOW);
-  for (int i = 0; i < stepsPerRevolution * 10; i++)
+  Serial.println("Y Move Down");
+  for (int i = 0; i < stepsPerRevolution * pos; i++)
   {
     digitalWrite(stepPinY, HIGH);
     delayMicroseconds(1000);
@@ -142,6 +151,7 @@ void yMoveDown()
     delayMicroseconds(1000);
     if (digitalRead(lLimitY) == 0)
     {
+      Serial.println("Limit switch hit");
       break;
     }
   }
@@ -181,66 +191,102 @@ void normal()
   delay(1000);
 }
 
+void checkState(String axisName, int pos)
+{
+
+  if (axisName == "ZU")
+  {
+    if (digitalRead(uLimitZ) == 1)
+    {
+      zMoveUp(pos);
+    }
+  }
+  else if (axisName == "ZD")
+  {
+    if (digitalRead(lLimitZ) == 1)
+    {
+      zMoveDown(pos);
+    }
+  }
+  else if (axisName == "XU")
+  {
+    if (digitalRead(uLimitX) == 1)
+    {
+      xMoveUp(pos);
+    }
+  }
+  else if (axisName == "XD")
+  {
+    if (digitalRead(lLimitX) == 1)
+    {
+      xMoveDown(pos);
+    }
+  }
+  else if (axisName == "YU")
+  {
+    if (digitalRead(uLimitY) == 1)
+    {
+      yMoveUp(pos);
+    }
+  }
+  else if (axisName == "YD")
+  {
+    if (digitalRead(lLimitZ) == 1)
+    {
+      yMoveDown(pos);
+    }
+  }
+  else
+  {
+    String message = "There is no axis name such as this....";
+    Serial.println(message);
+  }
+}
+
+boolean IsNumeric(String str)
+{
+  if (str.length() < 1)
+  {
+    return false;
+  }
+  bool bPoint = false;
+  for (unsigned char i = 0; i < str.length(); i++)
+  {
+    if (!(isDigit(str.charAt(i)) || str.charAt(i) == '.') || bPoint)
+    {
+      return false;
+    }
+    if (str.charAt(i) == '.')
+    {
+      bPoint = true;
+    };
+  }
+  return true;
+}
+
 void loop()
 {
   if (Serial.available() > 0)
   {
     String message = Serial.readStringUntil('\n');
+
     if (message != "")
     {
-      msgRec = message.toInt();
+      int endString = message.length();
+      String axisName = message.substring(0, 2);
+      Serial.println(axisName);
+      String posString = message.substring(2, endString);
+      int pos = 0;
+      if (IsNumeric(posString))
+      {
+        pos = posString.toInt();
+      }
+      else
+      {
+        Serial.println("There should not be any numeric in position");
+      }
+      Serial.println(pos);
+      checkState(axisName, pos);
     }
-  }
-  else
-  {
-    msgRec = 999;
-  }
-
-  switch (msgRec)
-  {
-  case 1:
-    if (digitalRead(uLimitZ) == 1)
-    {
-      zMoveUp();
-    }
-    break;
-  case 2:
-    if (digitalRead(lLimitZ) == 1)
-    {
-      zMoveDown();
-    }
-    break;
-  case 3:
-    if (digitalRead(uLimitX) == 1)
-    {
-      xMoveUp();
-    }
-    break;
-  case 4:
-    if (digitalRead(lLimitX) == 1)
-    {
-      xMoveDown();
-    }
-    break;
-  case 5:
-    if (digitalRead(uLimitY) == 1)
-    {
-      yMoveUp();
-    }
-    break;
-  case 6:
-    if (digitalRead(lLimitZ) == 1)
-    {
-      yMoveDown();
-    }
-    break;
-  case 0:
-    digitalWrite(stepPinZ, LOW);
-    digitalWrite(stepPinX, LOW);
-    digitalWrite(stepPinY, LOW);
-    msgRec = 999;
-    break;
-  default:
-    break;
   }
 }
