@@ -18,6 +18,7 @@ const int lLimitY = A3;
 
 // constant
 const long stepsPerRevolution = 200;
+const long halfSterpPerRevolution = 100;
 
 void setup()
 {
@@ -51,12 +52,12 @@ void zMoveUp(int pos)
 {
   digitalWrite(dirPinZ, HIGH);
   Serial.println("Z Moving up");
-  for (int i = 0; i < stepsPerRevolution * pos; i++)
+  for (int i = 0; i < halfSterpPerRevolution * pos; i++)
   {
     digitalWrite(stepPinZ, HIGH);
-    delayMicroseconds(500);
+    delayMicroseconds(1000);
     digitalWrite(stepPinZ, LOW);
-    delayMicroseconds(500);
+    delayMicroseconds(1000);
     if (digitalRead(uLimitZ) == 0)
     {
       Serial.println("Limit switch hit");
@@ -69,12 +70,12 @@ void zMoveDown(int pos)
 {
   digitalWrite(dirPinZ, LOW);
   Serial.println("Z Moving Down");
-  for (int i = 0; i < stepsPerRevolution * pos; i++)
+  for (int i = 0; i < halfSterpPerRevolution * pos; i++)
   {
     digitalWrite(stepPinZ, HIGH);
-    delayMicroseconds(500);
+    delayMicroseconds(1000);
     digitalWrite(stepPinZ, LOW);
-    delayMicroseconds(500);
+    delayMicroseconds(1000);
     if (digitalRead(lLimitZ) == 0)
     {
       Serial.println("Limit switch hit");
@@ -289,4 +290,6 @@ void loop()
       checkState(axisName, pos);
     }
   }
+
+  // limitSwitchTest();
 }
